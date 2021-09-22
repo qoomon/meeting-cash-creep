@@ -1,0 +1,17 @@
+{
+  "name": "meeting-cash-creep",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build"
+  },
+  "dependencies": {
+    "@pqina/flip": "^1.7.7",
+    "vue": "^3.0.0"
+  },
+  "devDependencies": {
+    "@vue/cli-service": "~4.5.0",
+    "@vue/compiler-sfc": "^3.0.0"
+  }
+}
