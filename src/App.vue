@@ -6,10 +6,10 @@
     style="height: 1.5em; font-size: 10vw;"
     >
       <Flip v-if="counterStyle ==='flip'"
-      :value="totalCosts" style="margin: auto; "
+      :value="totalCostsInteger" style="margin: auto; "
       />
       <Roller v-if="counterStyle ==='roll'"
-      :value="totalCosts" style="margin: auto;"
+      :value="totalCostsInteger" style="margin: auto;"
       />
     </div>
     
@@ -39,17 +39,29 @@
     
     <n-dynamic-input
     v-model:value="costsArray"
-    :on-create="addCostEntry"
     #="{ value }"
+    :on-create="addCostEntry"
+    :min="1"
     style="margin: auto; margin-top: 2em; width: 40em; max-width: 96vw;"
     >
       <div style="width: 100%; display: flex; align-items: center;">
         <n-checkbox v-model:checked="value.active" style="margin-right: 12px;" />
-        <n-input-number
-          v-model:value="value.value"
-          style="margin-right: 12px; width: 160px;"
+        <n-input v-model:value="value.description" type="text"
+        placeholder="Description" 
+        style="margin-right: 1em;"
         />
-        <n-input v-model:value="value.description" type="text" />
+        <n-input-number v-model:value="value.value"
+        placeholder="Cost" 
+        :show-button="false"
+        style="width: 12em; margin-right: 1em;"
+        >
+          <template #suffix><n-icon><currency-dollar/></n-icon></template>
+        </n-input-number>
+        <n-select v-model:value="value.interval"
+        default-value="hourly"
+        :options="costIntervalOptions" 
+        style="width: 11em;"
+        />
       </div>
     </n-dynamic-input>
     
@@ -60,21 +72,36 @@
 import { 
   NConfigProvider, darkTheme, 
   NDynamicInput, NInput, NInputNumber, 
+  NSelect,
   NIcon, NButton, NCheckbox, 
   NSpace
 } from 'naive-ui'
-import { Play, Pause, Reset} from '@vicons/carbon'
+import { Play, Pause, Reset, CurrencyDollar} from '@vicons/carbon'
 
 import Flip from "./components/Flip";
 import Roller from "./components/Roller";
+
+function intervalInWorkingSeconds(interval) {
+  const workingHours = 8
+  const wokingWeekDays = 5
+  switch (interval) {
+    case 'hourly':  return 60 * 60;
+    case 'daily':   return 60 * 60 * 24 * (workingHours/24);
+    case 'monthly': return 60 * 60 * 24 * (workingHours/24) * (wokingWeekDays/7) * 365/12;
+    case 'yearly':  return 60 * 60 * 24 * (workingHours/24) * (wokingWeekDays/7) * 356;
+    default:
+      throw Error('Unexpected interval: ' + interval)
+  }
+}
   
 export default {
   name: 'App',
   components: {
-    NConfigProvider, 
-    NDynamicInput, NInput, NInputNumber, 
-    NIcon, Play, Pause, Reset,
-    NButton, NCheckbox, 
+    NConfigProvider,
+    NDynamicInput, NInput, NInputNumber,
+    NSelect,
+    NIcon, Play, Pause, Reset, CurrencyDollar,
+    NButton, NCheckbox,
     NSpace,
     Flip, Roller
   },
@@ -87,18 +114,27 @@ export default {
         {
           active: true,
           value: 99,
+          interval: 'hourly',
           description: 'Coding Dude'
         }
       ],
-      counterStyle: 'flip'
+      counterStyle: 'flip',
+      costIntervalOptions: ['hourly',  'daily', 'mothly', 'yearly']
+        .map(option => ({value: option, label: option}))
     }
   },
   computed: {
+    totalCostsInteger() {
+      return Math.ceil(this.totalCosts)
+    },
     costsPerSecond() {
       return this.costsArray
-        .filter(cost => cost.active && cost.value)
-        .map(cost => cost.value)
-        .reduce((a, b) => a + b, 0)
+        .filter(cost => cost.active && cost.value && cost.interval )
+        .map(cost => {
+          console.log(cost.value, cost.interval, cost.value / intervalInWorkingSeconds(cost.interval));
+          return cost.value / intervalInWorkingSeconds(cost.interval)
+        })
+        .reduce((a, b) => a + b, 0) // sum
     }
   },
   watch: {
@@ -127,7 +163,11 @@ export default {
       this.totalCosts += this.costsPerSecond
     },
     addCostEntry() {
-      return {}
+      return {
+        active: false,
+        value: 10,
+        interval: 'hourly'
+      }
     },
     cycleCounterStyle() {
       switch (this.counterStyle) {
@@ -135,8 +175,8 @@ export default {
         case 'roll': this.counterStyle = 'flip'; break
         default: this.counterStyle = 'flip'; break
       }
-      console.log(this.counterStyle);
-    }
+    },
+    
   },
   created() {
     if (localStorage.costsArray) {
