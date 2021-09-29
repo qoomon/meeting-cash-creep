@@ -3,7 +3,7 @@
     <img alt="Vue logo" src="./assets/logo.png">
 
     <Flip :value="totalCosts" style="margin: auto; font-size: 10vw;"/>
-    <!-- <Roller :value="counter" style="margin: auto; font-size: 10vw;"/> -->
+    <Roller :value="totalCosts" style="margin: auto; font-size: 10vw;"/>
     
     <n-space justify="center"
     style="margin: auto; margin-top: 2em; width: 40em; max-width: 96vw;"
@@ -68,8 +68,7 @@ export default {
     NIcon, Play, Pause, Reset,
     NButton, NCheckbox, 
     NSpace,
-    Flip,
-    Roller
+    Flip, Roller
   },
   data() {
     return {
@@ -91,6 +90,14 @@ export default {
         .filter(cost => cost.active && cost.value)
         .map(cost => cost.value)
         .reduce((a, b) => a + b, 0)
+    }
+  },
+  watch: {
+    costsArray: {
+      deep: true,
+      handler(newValue) {
+        localStorage.costsArray = JSON.stringify(newValue);
+      }
     }
   },
   methods: {
@@ -115,6 +122,9 @@ export default {
     }
   },
   created() {
+    if (localStorage.costsArray) {
+      this.costsArray = JSON.parse(localStorage.costsArray);
+    }
   },
   beforeDestroy() {
     this.stopCounter()
