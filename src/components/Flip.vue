@@ -45,6 +45,8 @@ export default {
   watch: {
     async value(newValue, oldValue) {
       // -- flip vaiance for each digit --
+      const newValueLenght = Math.ceil(Math.log10(newValue + 1))
+      this._tick.value = this._tick.value % Math.pow(10, newValueLenght)
       let pos = 0
       for (const digit of String(newValue).split('').map(char => Number(char)).reverse()) {
         await timeout(Math.random() * this.variance)
