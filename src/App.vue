@@ -2,8 +2,16 @@
   <n-config-provider :theme="darkTheme">
     <img alt="Vue logo" src="./assets/logo.png">
 
-    <Flip :value="totalCosts" style="margin: auto; font-size: 10vw;"/>
-    <Roller :value="totalCosts" style="margin: auto; font-size: 10vw;"/>
+    <div @click="cycleCounterStyle()"
+    style="height: 1.5em; font-size: 10vw;"
+    >
+      <Flip v-if="counterStyle ==='flip'"
+      :value="totalCosts" style="margin: auto; "
+      />
+      <Roller v-if="counterStyle ==='roll'"
+      :value="totalCosts" style="margin: auto;"
+      />
+    </div>
     
     <n-space justify="center"
     style="margin: auto; margin-top: 2em; width: 40em; max-width: 96vw;"
@@ -81,7 +89,8 @@ export default {
           value: 99,
           description: 'Coding Dude'
         }
-      ]
+      ],
+      counterStyle: 'flip'
     }
   },
   computed: {
@@ -119,6 +128,14 @@ export default {
     },
     addCostEntry() {
       return {}
+    },
+    cycleCounterStyle() {
+      switch (this.counterStyle) {
+        case 'flip': this.counterStyle = 'roll'; break
+        case 'roll': this.counterStyle = 'flip'; break
+        default: this.counterStyle = 'flip'; break
+      }
+      console.log(this.counterStyle);
     }
   },
   created() {
