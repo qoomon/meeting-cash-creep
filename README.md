@@ -1,5 +1,7 @@
 # meeting-cash-creep
 
+**[Demo](https://qoomon.github.io/meeting-cash-creep)**
+
 ## Project setup
 ```
 npm install
