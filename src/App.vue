@@ -6,17 +6,17 @@
     style="height: 1.5em; font-size: 10vw;"
     >
       <Flip v-if="counterStyle ==='flip'"
-      :value="totalCostsInteger" style="margin: auto; "
+      :value="totalCosts" style="margin: auto; "
       />
       <Roller v-if="counterStyle ==='roll'"
-      :value="totalCostsInteger" style="margin: auto;"
+      :value="totalCosts" style="margin: auto;"
       />
     </div>
     
     <n-space justify="center"
     style="margin: auto; margin-top: 2em; width: 40em; max-width: 96vw;"
     >
-      <n-button v-if="totalCostsUpdateIterval"
+      <n-button v-if="counterIterval"
       type="primary" round ghost
       @click="stopCounter()"
       >
@@ -34,7 +34,9 @@
       >
         <template #icon><n-icon><reset/></n-icon></template>
      </n-button>
-    <!-- <n-button>Set</n-button> -->
+     <n-time-picker v-model:value="counterRuntime"
+     round :disabled="!!counterIterval" :actions="null"
+     />
     </n-space>
     
     <n-dynamic-input
@@ -43,25 +45,37 @@
     :on-create="addCostEntry"
     :min="1"
     style="margin: auto; margin-top: 2em; width: 40em; max-width: 96vw;"
-    >
+    > 
       <div style="width: 100%; display: flex; align-items: center;">
-        <n-checkbox v-model:checked="value.active" style="margin-right: 12px;" />
+        <n-input-number v-model:value="value.count"
+        round 
+        placeholder="0"
+        :min="0"
+        :max="9999"
+        style="width: 24em; margin-right: 1em;"
+        >
+          <template #prefix><n-icon><person/></n-icon></template>
+        </n-input-number>
         <n-input v-model:value="value.description" type="text"
         placeholder="Description" 
         style="margin-right: 1em;"
         />
-        <n-input-number v-model:value="value.value"
-        placeholder="Cost" 
-        :show-button="false"
-        style="width: 12em; margin-right: 1em;"
-        >
-          <template #suffix><n-icon><currency-dollar/></n-icon></template>
-        </n-input-number>
-        <n-select v-model:value="value.interval"
-        default-value="hourly"
-        :options="costIntervalOptions" 
-        style="width: 11em;"
-        />
+        <n-input-group round >
+          <n-input-number v-model:value="value.value"
+          placeholder="Cost" 
+          :min="0"
+          :max="999999999"
+          :show-button="false"
+          style="width: 8em; margin-right: 0.15em;"
+          >
+            <template #suffix><n-icon><currency-dollar/></n-icon></template>
+          </n-input-number>
+          <n-select v-model:value="value.interval"
+          default-value="hourly"
+          :options="costIntervalOptions" 
+          style="width: 7em;"
+          />
+        </n-input-group>
       </div>
     </n-dynamic-input>
     
@@ -71,12 +85,12 @@
 <script>
 import { 
   NConfigProvider, darkTheme, 
-  NDynamicInput, NInput, NInputNumber, 
+  NInputGroup, NDynamicInput, NInput, NInputNumber, NTimePicker,
   NSelect,
   NIcon, NButton, NCheckbox, 
   NSpace
 } from 'naive-ui'
-import { Play, Pause, Reset, CurrencyDollar} from '@vicons/carbon'
+import { Play, Pause, Reset, CurrencyDollar, Person} from '@vicons/carbon'
 
 import Flip from "./components/Flip";
 import Roller from "./components/Roller";
@@ -98,41 +112,44 @@ export default {
   name: 'App',
   components: {
     NConfigProvider,
-    NDynamicInput, NInput, NInputNumber,
+    NInputGroup, NDynamicInput, NInput, NInputNumber, NTimePicker,
     NSelect,
-    NIcon, Play, Pause, Reset, CurrencyDollar,
+    NIcon, Play, Pause, Reset, CurrencyDollar, Person,
     NButton, NCheckbox,
     NSpace,
     Flip, Roller
   },
   data() {
     return {
+      tickDelay: 1000,
       darkTheme,
-      totalCosts: 0,
-      totalCostsUpdateIterval: null,
+      counterIterval: null,
+      counterStart: null,
+      
+      counterRuntime: 0 - 3600000, // for n-time-picker 00:00:00 is -3600000
       costsArray: [
         {
-          active: true,
+          count: 42,
           value: 99,
           interval: 'hourly',
           description: 'Coding Dude'
         }
       ],
       counterStyle: 'flip',
-      costIntervalOptions: ['hourly',  'daily', 'mothly', 'yearly']
+      costIntervalOptions: ['hourly',  'daily', 'monthly', 'yearly']
         .map(option => ({value: option, label: option}))
     }
   },
   computed: {
-    totalCostsInteger() {
-      return Math.ceil(this.totalCosts)
+    totalCosts() {
+      const runtimeSeconds = (this.counterRuntime + 3600000) / 1000
+      return Math.ceil(runtimeSeconds * this.costsPerSecond)
     },
     costsPerSecond() {
       return this.costsArray
-        .filter(cost => cost.active && cost.value && cost.interval )
+        .filter(cost => cost.count && cost.value && cost.interval )
         .map(cost => {
-          console.log(cost.value, cost.interval, cost.value / intervalInWorkingSeconds(cost.interval));
-          return cost.value / intervalInWorkingSeconds(cost.interval)
+          return cost.value / intervalInWorkingSeconds(cost.interval) * cost.count
         })
         .reduce((a, b) => a + b, 0) // sum
     }
@@ -148,24 +165,25 @@ export default {
   methods: {
     startCounter() {
       this.stopCounter()
-      this.totalCostsUpdateIterval = setInterval(this.costTick, 1000)
+      this.counterIterval = setInterval(this.costTick, this.tickDelay)
+      
     },
     stopCounter() {
-      if(this.totalCostsUpdateIterval) {
-        clearInterval(this.totalCostsUpdateIterval)
-        this.totalCostsUpdateIterval = null
+      if(this.counterIterval) {
+        clearInterval(this.counterIterval)
+        this.counterIterval = null
       }  
     },
     resetCounter() {
-      this.totalCosts = 0  
+      this.counterRuntime = 0 - 3600000
     },
     costTick() {
-      this.totalCosts += this.costsPerSecond
+      this.counterRuntime += this.tickDelay
     },
     addCostEntry() {
       return {
-        active: false,
-        value: 10,
+        count: 0,
+        value: 42,
         interval: 'hourly'
       }
     },
@@ -208,4 +226,11 @@ body {
   margin-top: 60px;
   
 }
+div.n-input-number[round] > div.n-input,
+div.n-time-picker[round] > div.n-input,
+div.n-input-group[round] > div.n-input-number > div.n-input,
+div.n-input-group[round] > div.n-select > div.n-base-selection  {
+  border-radius: calc(var(--height) / 2);
+}
+
 </style>
