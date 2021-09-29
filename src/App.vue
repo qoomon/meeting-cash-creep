@@ -13,6 +13,7 @@
       />
     </div>
     
+    
     <n-space justify="center"
     style="margin: auto; margin-top: 2em; width: 40em; max-width: 96vw;"
     >
@@ -39,12 +40,13 @@
      />
     </n-space>
     
+    
     <n-dynamic-input
     v-model:value="costsArray"
     #="{ value }"
     :on-create="addCostEntry"
     :min="1"
-    style="margin: auto; margin-top: 2em; width: 40em; max-width: 96vw;"
+    style="margin: auto; margin-top: 3em; width: 40em; max-width: 96vw;"
     > 
       <div style="width: 100%; display: flex; align-items: center;">
         <n-input-number v-model:value="value.count"
@@ -85,6 +87,7 @@
 <script>
 import { 
   NConfigProvider, darkTheme, 
+  NDivider,
   NInputGroup, NDynamicInput, NInput, NInputNumber, NTimePicker,
   NSelect,
   NIcon, NButton, NCheckbox, 
@@ -112,6 +115,7 @@ export default {
   name: 'App',
   components: {
     NConfigProvider,
+    NDivider,
     NInputGroup, NDynamicInput, NInput, NInputNumber, NTimePicker,
     NSelect,
     NIcon, Play, Pause, Reset, CurrencyDollar, Person,
