@@ -1,6 +1,7 @@
 <template>
   <n-config-provider :theme="darkTheme">
-    <img alt="Vue logo" src="./assets/logo.png">
+    <img src="./assets/meeting-bubbles.png" style="height: 30vw; max-height: 20vh;">
+    <!-- <img src="./assets/meeting-people.png" style="position: fixed; height: 40vw; max-height: 20vh; bottom: 0; left: 0; right: 0; margin: auto;"> -->
 
     <div @click="cycleCounterStyle()"
     style="position: relative; height: 1.5em; font-size: 10vw;"
@@ -13,14 +14,14 @@
       :value="totalCosts" 
       style="display: inline-block; margin: auto;"
       />
-      <n-icon color="#528679" style="position: absolute; height: 100%; line-height: 1.9em;">
+      <n-icon color="#2c7b5e" style="position: absolute; height: 100%; line-height: 1.9em;">
         <currency-dollar/>
       </n-icon>
     </div>
     
     
     <n-space justify="center"
-    style="margin: auto; margin-top: 2em; width: 40em; max-width: 96vw;"
+    style="margin: auto; margin-top: 4em; width: 40em; max-width: 96vw;"
     >
       <n-button v-if="counterIterval"
       type="primary" round ghost
@@ -51,7 +52,7 @@
     #="{ value }"
     :on-create="addCostEntry"
     :min="1"
-    style="margin: auto; margin-top: 3em; width: 40em; max-width: 96vw;"
+    style="margin: auto; margin-top: 4em; width: 40em; max-width: 96vw;"
     > 
       <div style="width: 100%; display: flex; align-items: center;">
         <n-input-number v-model:value="value.count"
@@ -232,8 +233,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #c3c3c6;
-  margin-top: 60px;
-  
+  margin-top: 2em;
 }
 div.n-input-number[round] > div.n-input,
 div.n-time-picker[round] > div.n-input,
