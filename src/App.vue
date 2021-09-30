@@ -3,14 +3,19 @@
     <img alt="Vue logo" src="./assets/logo.png">
 
     <div @click="cycleCounterStyle()"
-    style="height: 1.5em; font-size: 10vw;"
+    style="position: relative; height: 1.5em; font-size: 10vw;"
     >
       <Flip v-if="counterStyle ==='flip'"
-      :value="totalCosts" style="margin: auto; "
+      :value="totalCosts" 
+      style="display: inline-block; margin: auto;"
       />
       <Roller v-if="counterStyle ==='roll'"
-      :value="totalCosts" style="margin: auto;"
+      :value="totalCosts" 
+      style="display: inline-block; margin: auto;"
       />
+      <n-icon color="#528679" style="position: absolute; height: 100%; line-height: 1.9em;">
+        <currency-dollar/>
+      </n-icon>
     </div>
     
     
@@ -226,7 +231,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: #c3c3c6;
   margin-top: 60px;
   
 }
