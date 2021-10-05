@@ -1,200 +1,278 @@
 <template>
   <n-config-provider :theme="darkTheme">
     <img src="./assets/meeting-bubbles.png" style="height: 30vw; max-height: 20vh;">
-    <!-- <img src="./assets/meeting-people.png" style="position: fixed; height: 40vw; max-height: 20vh; bottom: 0; left: 0; right: 0; margin: auto;"> -->
 
+    <!-- Counter -->
     <div @click="cycleCounterStyle()"
-    style="position: relative; height: 1.5em; font-size: 10vw;"
+      style="position: relative; height: 1.5em; font-size: 10vw;"
     >
-      <Flip v-if="counterStyle ==='flip'"
-      :value="totalCosts" 
-      style="display: inline-block; margin: auto;"
+      <Flip :value="totalCostsInt" 
+        v-if="counterStyle ==='flip'" 
+        style="display: inline-block; margin: auto;"
       />
-      <Roller v-if="counterStyle ==='roll'"
-      :value="totalCosts" 
-      style="display: inline-block; margin: auto;"
+      <Roller :value="totalCostsInt" 
+        v-if="counterStyle ==='roll'"
+        style="display: inline-block; margin: auto;"
       />
       <n-icon color="#2c7b5e" style="position: absolute; height: 100%; line-height: 1.9em;">
-        <currency-dollar/>
+        <icon-currency-dollar/>
       </n-icon>
     </div>
     
-    
+    <!-- Counter Controls -->
     <n-space justify="center"
-    style="margin: auto; margin-top: 4em; width: 40em; max-width: 96vw;"
+      style="margin: auto; margin-top: 4em; width: 40em; max-width: 96vw;"
     >
-      <n-button v-if="counterIterval"
-      type="primary" round ghost
-      @click="stopCounter()"
+      <n-button type="primary" round :ghost="!!costCounterIterval"
+        @click="!costCounterIterval ? startCostCounter() : stopCostCounter()"
       >
-        <template #icon><n-icon><pause/></n-icon></template>
-      </n-button>
-      <n-button v-else
-      type="primary" round
-      @click="startCounter()"
-      >
-        <template #icon><n-icon><play/></n-icon></template>
+        <template #icon>
+          <n-icon v-if="!costCounterIterval"><icon-play/></n-icon>
+          <n-icon v-else><icon-pause/></n-icon>
+        </template>
       </n-button>
       
-      <n-button round
-      @click="resetCounter()"
-      >
-        <template #icon><n-icon><reset/></n-icon></template>
-     </n-button>
-     <n-time-picker v-model:value="counterRuntime"
-     round :disabled="!!counterIterval" :actions="null"
-     />
+      <n-button type="default" round @click="resetCostCounter()">
+        <template #icon><n-icon><icon-reset/></n-icon></template>
+      </n-button>
+      
+      <!-- for n-time-picker 00:00:00 is -3600000 -->
+      <n-time-picker round v-model:value="counterRuntime" 
+        :on-blur="() => totalCosts = costsPerSecond * (counterRuntime + 3600000)/1000"
+        :actions="null"
+        :disabled="counterRuntime > 0 - 3600000 || !!costCounterIterval"
+      />
     </n-space>
     
-    
-    <n-dynamic-input
-    v-model:value="costsArray"
-    #="{ value }"
-    :on-create="addCostEntry"
-    :min="1"
-    style="margin: auto; margin-top: 4em; width: 40em; max-width: 96vw;"
-    > 
-      <div style="width: 100%; display: flex; align-items: center;">
-        <n-input-number v-model:value="value.count"
-        round 
-        placeholder="0"
-        :min="0"
-        :max="9999"
-        style="width: 24em; margin-right: 1em;"
-        >
-          <template #prefix><n-icon><person/></n-icon></template>
-        </n-input-number>
-        <n-input v-model:value="value.description" type="text"
-        placeholder="Description" 
-        style="margin-right: 1em;"
-        />
-        <n-input-group round >
-          <n-input-number v-model:value="value.value"
-          placeholder="Cost" 
-          :min="0"
-          :max="999999999"
-          :show-button="false"
-          style="width: 8em; margin-right: 0.15em;"
+    <!-- Cost List -->
+    <draggable v-model="costsList"
+      item-key="id"
+      handle=".draggable-handle"
+      animation="300"
+      ghost-class="draggable-ghost"
+      style="margin: auto; margin-top: 4em; width: 40em; max-width: 96vw;"
+    >
+      <template #item="{i, element}">
+        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+          <n-input-group round >
+            <n-input-number v-model:value="element.count" :min="0" :max="9999"
+              placeholder="0"
+              style="text-align: center; width: 8em; flex-shrink: 0; flex-grow: 0; margin-right: 3px;"
+            >
+              <template #prefix><n-icon><icon-person/></n-icon></template>
+            </n-input-number>
+            
+            <n-input v-model:value="element.name" type="text" placeholder="Name" />
+            
+            <n-button type="default" text-color="#ffffffd1" round icon-placement="right" 
+              @click="costEditorElement = element; showCostEditor = true"
+              style="width: 6em; flex-shrink: 0; flex-grow: 0; margin-left: 2px !important; background-color: #ffffff1a"
+            >
+              {{ hourlyCostValue(element).toFixed(0) }}
+              <template #icon>
+                <div style="color: #ffffff61; font-size: 0.9em;">
+                  <n-icon><icon-currency-dollar/></n-icon>
+                  <span style="position: relative; left: -4px; bottom: 2px; font-size: 0.65em; ">/</span>
+                  <span style="position: relative; left: -5px; bottom: 1px; font-size: 0.6em; font-weight: bold; font-style: italic;">h</span>
+                </div>
+              </template>
+            </n-button>
+          </n-input-group>
+          
+          <n-button text style="margin-left: 8px;"
+            @click="costsList.splice(i, 1)" 
           >
-            <template #suffix><n-icon><currency-dollar/></n-icon></template>
-          </n-input-number>
-          <n-select v-model:value="value.interval"
-          default-value="hourly"
-          :options="costIntervalOptions" 
-          style="width: 7em;"
-          />
-        </n-input-group>
-      </div>
-    </n-dynamic-input>
+            <template #icon>
+              <n-icon size='medium' class="dim">
+                <icon-trash-can/>
+              </n-icon>
+            </template>
+          </n-button>
+        
+          <n-icon size='large' class="draggable-handle dim" style="margin-left: 8px;">
+            <icon-draggable/>
+          </n-icon>
+        </div>
+      </template>
+      <template #footer>
+        <div style="display: flex; margin-top: 16px;">
+          <n-button type="default" round dashed ghost style="width: 100%;"
+            @click="addCost()" 
+          >
+            <template #icon><n-icon class="dim"><icon-add/></n-icon></template>
+          </n-button>
+          <n-icon size='medium' style="margin-left: 8px;"/>
+          <n-icon size='large' style="margin-left: 8px;"/>
+        </div>
+      </template>
+    </draggable>
     
+    <!-- Cost Value Editor -->
+    <n-modal v-model:show="showCostEditor">
+      <n-card size="medium" style="width: auto;" :title="costEditorElement.name || 'No Name'" :bordered="false" >
+        <template #header-extra>Settings</template>
+        <n-space vertical>
+          <n-input-group round>
+            <n-input-group-label style="width: 8em; margin-right: 3px; text-align: center;">
+              Cost
+            </n-input-group-label>    
+            <n-input-number v-model:value="costEditorElement.value"
+              placeholder="Cost" 
+              :min="0" :max="999999999"
+              :show-button="false"
+              style="text-align: center; width: 8em; margin-right: 3px;"
+            >
+              <template #suffix><n-icon><icon-currency-dollar/></n-icon></template>
+            </n-input-number>
+            <n-select v-model:value="costEditorElement.unit"
+              default-value="hourly"
+              :options="costTimeUnits" 
+              style="width: 7em;"
+            />
+          </n-input-group>
+          <n-input-group round v-if="costEditorElement.unit !== 'hourly'" >
+            <n-input-group-label style="width: 8em; margin-right: 3px;">
+              {{ costEditorElement.unit === 'daily' ? 'Daily' : 'Weekly'}} hours
+            </n-input-group-label>      
+            <n-input-number v-model:value="costEditorElement.workingHours"
+              placeholder="Hours" 
+              :min="1" :max="168"
+              :show-button="false"
+              style="text-align: center; width: 8em;"
+            >
+              <template #suffix><n-icon><icon-diagram/></n-icon></template>
+            </n-input-number>
+          </n-input-group>
+        </n-space>
+        <!-- <template #footer> Footer </template> -->
+      </n-card>
+    </n-modal>
   </n-config-provider>
 </template>
 
 <script>
+import draggable from 'vuedraggable'
+
 import { 
   NConfigProvider, darkTheme, 
   NDivider,
-  NInputGroup, NDynamicInput, NInput, NInputNumber, NTimePicker,
+  NInputGroup, NInputGroupLabel, NDynamicInput, NInput, NInputNumber, NTimePicker,
   NSelect,
   NIcon, NButton, NCheckbox, 
-  NSpace
+  NSpace,
+  NModal,
+  NCard
 } from 'naive-ui'
-import { Play, Pause, Reset, CurrencyDollar, Person} from '@vicons/carbon'
+
+import { 
+  Play as IconPlay, 
+  Pause as IconPause, 
+  Reset as IconReset, 
+  CurrencyDollar as IconCurrencyDollar, 
+  Person as IconPerson, 
+  Add as IconAdd, 
+  Draggable as IconDraggable,
+  TrashCan as IconTrashCan,
+  Diagram as IconDiagram
+} from '@vicons/carbon'
 
 import Flip from "./components/Flip";
 import Roller from "./components/Roller";
-
-function intervalInWorkingSeconds(interval) {
-  const workingHours = 8
-  const wokingWeekDays = 5
-  switch (interval) {
-    case 'hourly':  return 60 * 60;
-    case 'daily':   return 60 * 60 * 24 * (workingHours/24);
-    case 'monthly': return 60 * 60 * 24 * (workingHours/24) * (wokingWeekDays/7) * 365/12;
-    case 'yearly':  return 60 * 60 * 24 * (workingHours/24) * (wokingWeekDays/7) * 356;
-    default:
-      throw Error('Unexpected interval: ' + interval)
-  }
-}
   
 export default {
   name: 'App',
   components: {
     NConfigProvider,
     NDivider,
-    NInputGroup, NDynamicInput, NInput, NInputNumber, NTimePicker,
+    NInputGroup, NInputGroupLabel, NDynamicInput, NInput, NInputNumber, NTimePicker,
     NSelect,
-    NIcon, Play, Pause, Reset, CurrencyDollar, Person,
+    NIcon, 
+    IconPlay, IconPause, IconReset, IconCurrencyDollar, IconPerson, IconAdd, IconDraggable, IconTrashCan, IconDiagram,
     NButton, NCheckbox,
     NSpace,
+    NModal,
+    NCard,
+    draggable,
     Flip, Roller
   },
   data() {
     return {
-      tickDelay: 1000,
       darkTheme,
-      counterIterval: null,
-      counterStart: null,
       
+      costCounterIterval: null,
+      costCounterTickDelay: 1000,
       counterRuntime: 0 - 3600000, // for n-time-picker 00:00:00 is -3600000
-      costsArray: [
-        {
-          count: 42,
-          value: 99,
-          interval: 'hourly',
-          description: 'Coding Dude'
-        }
-      ],
+      
+      costsList: [],
+      showCostEditor: false,
+      costEditorElement: null,
+      costElementHover: null,
+      
+      totalCosts: 0,
+      
       counterStyle: 'flip',
-      costIntervalOptions: ['hourly',  'daily', 'monthly', 'yearly']
+      costTimeUnits: ['hourly',  'daily', 'monthly', 'yearly']
         .map(option => ({value: option, label: option}))
     }
   },
   computed: {
-    totalCosts() {
-      const runtimeSeconds = (this.counterRuntime + 3600000) / 1000
-      return Math.ceil(runtimeSeconds * this.costsPerSecond)
+    totalCostsInt() {
+      return Math.round(this.totalCosts)
     },
     costsPerSecond() {
-      return this.costsArray
-        .filter(cost => cost.count && cost.value && cost.interval )
-        .map(cost => {
-          return cost.value / intervalInWorkingSeconds(cost.interval) * cost.count
-        })
+      return this.costsList
+        .filter(cost => cost.count && cost.value && cost.unit)
+        .map(cost => this.hourlyCostValue(cost)/60/60 * cost.count)
         .reduce((a, b) => a + b, 0) // sum
     }
   },
   watch: {
-    costsArray: {
+    costsList: {
       deep: true,
       handler(newValue) {
-        localStorage.costsArray = JSON.stringify(newValue);
+        localStorage.setItem("cash-creep/costsList", JSON.stringify(newValue));
       }
     }
   },
   methods: {
-    startCounter() {
-      this.stopCounter()
-      this.counterIterval = setInterval(this.costTick, this.tickDelay)
+    startCostCounter() {
+      this.stopCostCounter()
+      this.costCounterIterval = setInterval(this.costCounterTick, this.costCounterTickDelay)
       
     },
-    stopCounter() {
-      if(this.counterIterval) {
-        clearInterval(this.counterIterval)
-        this.counterIterval = null
+    stopCostCounter() {
+      if(this.costCounterIterval) {
+        clearInterval(this.costCounterIterval)
+        this.costCounterIterval = null
       }  
     },
-    resetCounter() {
-      this.counterRuntime = 0 - 3600000
+    resetCostCounter() {
+      this.counterRuntime = 0 - 3600000, // for n-time-picker 00:00:00 is -3600000
+      this.totalCosts = 0
     },
-    costTick() {
-      this.counterRuntime += this.tickDelay
+    costCounterTick() {
+      this.counterRuntime += this.costCounterTickDelay
+      this.totalCosts += this.costsPerSecond * (this.costCounterTickDelay/1000)
     },
-    addCostEntry() {
-      return {
+    addCost(cost) {
+      return this.costsList.push(Object.assign({
+        id: window.performance.now() * Math.pow(10,10), // dirty id generation
         count: 0,
-        value: 42,
-        interval: 'hourly'
+        value: 0,
+        unit: 'hourly',
+        workingHours: 8
+      }, cost))
+    },
+    hourlyCostValue(cost) {
+      const weeksPerMonth = 365/12/7
+      const weeksPerYear = 365/7
+      switch (cost.unit) {
+        case 'hourly':  return cost.value;
+        case 'daily':   return cost.value / cost.workingHours
+        case 'monthly': return cost.value / (cost.workingHours * weeksPerMonth)
+        case 'yearly':  return  cost.value / (cost.workingHours * weeksPerYear)
+        default:
+          throw Error('Unexpected unit: ' + cost.unit)
       }
     },
     cycleCounterStyle() {
@@ -203,16 +281,23 @@ export default {
         case 'roll': this.counterStyle = 'flip'; break
         default: this.counterStyle = 'flip'; break
       }
-    },
-    
+    }
   },
   created() {
-    if (localStorage.costsArray) {
-      this.costsArray = JSON.parse(localStorage.costsArray);
+    if (localStorage.getItem("cash-creep/costsList")) {
+      this.costsList = JSON.parse(localStorage.getItem("cash-creep/costsList"));
+    } 
+    if (this.costsList.length === 0) {
+      this.addCost({
+          count: 42,
+          value: 99,
+          unit: 'hourly',
+          name: 'Whimsical Unicorn'
+      })
     }
   },
   beforeDestroy() {
-    this.stopCounter()
+    this.stopCostCounter()
   }
 }
 </script>
@@ -227,6 +312,7 @@ body {
   background-color: #40414a;
   overflow-y: auto;
 }
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -235,11 +321,35 @@ body {
   color: #c3c3c6;
   margin-top: 2em;
 }
+
 div.n-input-number[round] > div.n-input,
 div.n-time-picker[round] > div.n-input,
+div.n-input-group[round] > div.n-input,
+div.n-input-group[round] > div.n-input-group-label,
 div.n-input-group[round] > div.n-input-number > div.n-input,
 div.n-input-group[round] > div.n-select > div.n-base-selection  {
   border-radius: calc(var(--height) / 2);
 }
+div.n-input-group > button.n-button > div.n-button__border {
+  display: none;
+}
 
+.n-icon.dim {
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+button.n-button:hover > .n-button__icon .n-icon.dim {
+  opacity: inherit;
+}
+
+.draggable-handle {
+  cursor: grab;
+}
+.draggable-handle:active {
+  cursor: grabbing;
+}
+
+.draggable-ghost {
+  opacity: 0;
+}
 </style>
