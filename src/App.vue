@@ -58,7 +58,7 @@
               placeholder="0"
               style="width: 8em; flex-shrink: 0; flex-grow: 0; margin-right: 3px; text-align: center; "
             >
-              <template #prefix><n-icon><icon-person/></n-icon></template>
+              <template #prefix><n-icon size="large"><icon-person/></n-icon></template>
             </n-input-number>
             
             <n-input v-model:value="element.name" type="text" placeholder="Name" />
@@ -70,9 +70,8 @@
               {{ Math.round(hourlyCostValue(element)) }}
               <template #icon>
                 <div style="color: #ffffff61; font-size: 0.9em;">
-                  <n-icon><icon-currency-dollar/></n-icon>
-                  <span style="position: relative; left: -4px; bottom: 2px; font-size: 0.65em;">/</span>
-                  <span style="position: relative; left: -5px; bottom: 1px; font-size: 0.6em; font-weight: bold; font-style: italic;">h</span>
+                  <n-icon size="large"><icon-currency-dollar/></n-icon>
+                  <span style="position: relative; left: -0.4em; bottom: 0; font-size: 0.6em; font-weight: bold; font-style: italic;">h</span>
                 </div>
               </template>
             </n-button>
@@ -111,64 +110,60 @@
         <template #header-extra>
           {{ Math.round(hourlyCostValue(costEditorElement)) }}
           <div style="position: relative; bottom: -3px; color: #ffffff61; font-size: 1.2em;">
-            <n-icon><icon-currency-dollar/></n-icon>
-            <span style="position: relative; left: -5px; bottom: 2px; font-size: 0.65em;">/</span>
-            <span style="position: relative; left: -6px; bottom: 1px; font-size: 0.6em; font-style: italic;">h</span>
+            <n-icon size="large"><icon-currency-dollar/></n-icon>
+            <span style="position: relative; left: -0.4em; bottom: 0; font-size: 0.6em; font-weight: 400; font-style: italic;">h</span>
           </div>
         </template>
         <n-space vertical>
           <n-input-group round>
-            <n-input-group-label style="width: 20%; margin-right: 3px;">
-              Cost
-            </n-input-group-label>
             <n-select v-model:value="costEditorElement.unit"
               default-value="hourly"
-              :options="costTimeUnits" 
-              style="width: 30%; margin-right: 3px; text-align: center; "
+              :options="costTimeUnits.map(unit => ({value: unit, label: `${unit.capitalize()} Costs`}))" 
+              style="width: 50%; margin-right: 3px;"
             />
             <n-input-number v-model:value="costEditorElement.value"
               placeholder="Cost" 
               :min="0" :max="999999999"
               style="width: 50%; text-align: center;"
             >
-              <template #suffix><n-icon><icon-currency-dollar/></n-icon></template>
+              <template #prefix><n-icon size="large"><icon-currency-dollar/></n-icon></template>
             </n-input-number>
             
           </n-input-group>
           <n-input-group round v-if="['daily', 'monthly', 'yearly'].includes(costEditorElement.unit)" >
             <n-input-group-label style="width: 50%; margin-right: 3px;">
-              Daily working hours
+              Daily Working Hours
             </n-input-group-label>      
             <n-input-number v-model:value="costEditorElement.workingHours"
               placeholder="Hours" 
               :min="1" :max="24"
               style="width: 50%; text-align: center"
             >
-              <template #suffix><n-icon><icon-time/></n-icon></template>
+              <template #prefix><n-icon size="large"><icon-time/></n-icon></template>
             </n-input-number>
           </n-input-group>
           <n-input-group round v-if="['monthly', 'yearly'].includes(costEditorElement.unit)" >
             <n-input-group-label style="width: 50%; margin-right: 3px;">
-              Weekly working days
+              Weekly Working Days
             </n-input-group-label>      
             <n-input-number v-model:value="costEditorElement.workingDays"
               placeholder="Days" 
               :min="1" :max="7"
               style="width: 50%; text-align: center"
             >
-              <template #suffix><n-icon><icon-calendar/></n-icon></template>
+              <template #prefix><n-icon size="large"><icon-calendar/></n-icon></template>
             </n-input-number>
           </n-input-group>
           <n-input-group round v-if="['monthly', 'yearly'].includes(costEditorElement.unit)" >
             <n-input-group-label style="width: 50%; margin-right: 3px;">
-              Off days
+              {{ costEditorElement.unit.capitalize() }} Off days
             </n-input-group-label>      
             <n-input-number v-model:value="costEditorElement.daysOff"
               placeholder="Days" 
               :min="0" :max="Math.floor(costEditorElement.workingDays * weeksPerTimeUnit(costEditorElement.unit))"
               style="width: 50%; text-align: center;"
             >
-              <template #suffix><n-icon><icon-calendar-heat-map/></n-icon></template>
+              <template #prefix><n-icon size="large"><icon-calendar-heat-map/></n-icon></template>
             </n-input-number>
           </n-input-group>
         </n-space>
@@ -213,6 +208,9 @@ import {
 import Flip from "./components/Flip"
 import Roller from "./components/Roller"
 
+String.prototype.capitalize = function() {
+  return this[0].toUpperCase() + this.slice(1)
+}
   
 export default {
   name: 'App',
@@ -249,7 +247,7 @@ export default {
       
       counterStyle: 'flip',
       costTimeUnits: ['hourly',  'daily', 'monthly', 'yearly']
-        .map(option => ({value: option, label: option}))
+        
     }
   },
   computed: {
