@@ -56,7 +56,7 @@
           <n-input-group round >
             <n-input-number v-model:value="element.count" :min="0" :max="9999"
               placeholder="0"
-              style="text-align: center; width: 8em; flex-shrink: 0; flex-grow: 0; margin-right: 3px;"
+              style="width: 8em; flex-shrink: 0; flex-grow: 0; margin-right: 3px; text-align: center; "
             >
               <template #prefix><n-icon><icon-person/></n-icon></template>
             </n-input-number>
@@ -65,13 +65,13 @@
             
             <n-button type="default" text-color="#ffffffd1" round icon-placement="right" 
               @click="costEditorElement = element; showCostEditor = true"
-              style="width: 6em; flex-shrink: 0; flex-grow: 0; margin-left: 2px !important; background-color: #ffffff1a"
+              style="width: 6em; flex-shrink: 0; flex-grow: 0; margin-left: 2px !important; background-color: #ffffff1a;"
             >
-              {{ hourlyCostValue(element).toFixed(0) }}
+              {{ Math.round(hourlyCostValue(element)) }}
               <template #icon>
                 <div style="color: #ffffff61; font-size: 0.9em;">
                   <n-icon><icon-currency-dollar/></n-icon>
-                  <span style="position: relative; left: -4px; bottom: 2px; font-size: 0.65em; ">/</span>
+                  <span style="position: relative; left: -4px; bottom: 2px; font-size: 0.65em;">/</span>
                   <span style="position: relative; left: -5px; bottom: 1px; font-size: 0.6em; font-weight: bold; font-style: italic;">h</span>
                 </div>
               </template>
@@ -108,37 +108,67 @@
     <!-- Cost Value Editor -->
     <n-modal v-model:show="showCostEditor">
       <n-card size="medium" style="width: auto;" :title="costEditorElement.name || 'No Name'" :bordered="false" >
-        <template #header-extra>Settings</template>
+        <template #header-extra>
+          {{ Math.round(hourlyCostValue(costEditorElement)) }}
+          <div style="position: relative; bottom: -3px; color: #ffffff61; font-size: 1.2em;">
+            <n-icon><icon-currency-dollar/></n-icon>
+            <span style="position: relative; left: -5px; bottom: 2px; font-size: 0.65em;">/</span>
+            <span style="position: relative; left: -6px; bottom: 1px; font-size: 0.6em; font-style: italic;">h</span>
+          </div>
+        </template>
         <n-space vertical>
           <n-input-group round>
-            <n-input-group-label style="width: 8em; margin-right: 3px; text-align: center;">
+            <n-input-group-label style="width: 20%; margin-right: 3px;">
               Cost
-            </n-input-group-label>    
-            <n-input-number v-model:value="costEditorElement.value"
-              placeholder="Cost" 
-              :min="0" :max="999999999"
-              :show-button="false"
-              style="text-align: center; width: 8em; margin-right: 3px;"
-            >
-              <template #suffix><n-icon><icon-currency-dollar/></n-icon></template>
-            </n-input-number>
+            </n-input-group-label>
             <n-select v-model:value="costEditorElement.unit"
               default-value="hourly"
               :options="costTimeUnits" 
-              style="width: 7em;"
+              style="width: 30%; margin-right: 3px; text-align: center; "
             />
+            <n-input-number v-model:value="costEditorElement.value"
+              placeholder="Cost" 
+              :min="0" :max="999999999"
+              style="width: 50%; text-align: center;"
+            >
+              <template #suffix><n-icon><icon-currency-dollar/></n-icon></template>
+            </n-input-number>
+            
           </n-input-group>
-          <n-input-group round v-if="costEditorElement.unit !== 'hourly'" >
-            <n-input-group-label style="width: 8em; margin-right: 3px;">
-              {{ costEditorElement.unit === 'daily' ? 'Daily' : 'Weekly'}} hours
+          <n-input-group round v-if="['daily', 'monthly', 'yearly'].includes(costEditorElement.unit)" >
+            <n-input-group-label style="width: 50%; margin-right: 3px;">
+              Daily working hours
             </n-input-group-label>      
             <n-input-number v-model:value="costEditorElement.workingHours"
               placeholder="Hours" 
-              :min="1" :max="168"
-              :show-button="false"
-              style="text-align: center; width: 8em;"
+              :min="1" :max="24"
+              style="width: 50%; text-align: center"
             >
-              <template #suffix><n-icon><icon-diagram/></n-icon></template>
+              <template #suffix><n-icon><icon-time/></n-icon></template>
+            </n-input-number>
+          </n-input-group>
+          <n-input-group round v-if="['monthly', 'yearly'].includes(costEditorElement.unit)" >
+            <n-input-group-label style="width: 50%; margin-right: 3px;">
+              Weekly working days
+            </n-input-group-label>      
+            <n-input-number v-model:value="costEditorElement.workingDays"
+              placeholder="Days" 
+              :min="1" :max="7"
+              style="width: 50%; text-align: center"
+            >
+              <template #suffix><n-icon><icon-calendar/></n-icon></template>
+            </n-input-number>
+          </n-input-group>
+          <n-input-group round v-if="['monthly', 'yearly'].includes(costEditorElement.unit)" >
+            <n-input-group-label style="width: 50%; margin-right: 3px;">
+              Off days
+            </n-input-group-label>      
+            <n-input-number v-model:value="costEditorElement.daysOff"
+              placeholder="Days" 
+              :min="0" :max="Math.floor(costEditorElement.workingDays * weeksPerTimeUnit(costEditorElement.unit))"
+              style="width: 50%; text-align: center;"
+            >
+              <template #suffix><n-icon><icon-calendar-heat-map/></n-icon></template>
             </n-input-number>
           </n-input-group>
         </n-space>
@@ -174,7 +204,10 @@ import {
   Add as IconAdd, 
   Draggable as IconDraggable,
   TrashCan as IconTrashCan,
-  Diagram as IconDiagram
+  Diagram as IconDiagram,
+  Time as IconTime,
+  Calendar as IconCalendar,
+  CalendarHeatMap as IconCalendarHeatMap
 } from '@vicons/carbon'
 
 import Flip from "./components/Flip"
@@ -189,7 +222,7 @@ export default {
     NInputGroup, NInputGroupLabel, NDynamicInput, NInput, NInputNumber, NTimePicker,
     NSelect,
     NIcon, 
-    IconPlay, IconPause, IconReset, IconCurrencyDollar, IconPerson, IconAdd, IconDraggable, IconTrashCan, IconDiagram,
+    IconPlay, IconPause, IconReset, IconCurrencyDollar, IconPerson, IconAdd, IconDraggable, IconTrashCan, IconDiagram, IconTime, IconCalendar, IconCalendarHeatMap,
     NButton, NCheckbox,
     NSpace,
     NModal,
@@ -281,19 +314,28 @@ export default {
         count: 0,
         value: 0,
         unit: 'hourly',
-        workingHours: 8
+        workingHours: 8,
+        workingDays: 5,
+        daysOff: 24
       }, cost))
     },
     hourlyCostValue(cost) {
-      const weeksPerMonth = 365/12/7
-      const weeksPerYear = 365/7
+      const weeksOff = cost.daysOff / cost.workingDays
       switch (cost.unit) {
         case 'hourly':  return cost.value;
         case 'daily':   return cost.value / cost.workingHours
-        case 'monthly': return cost.value / (cost.workingHours * weeksPerMonth)
-        case 'yearly':  return  cost.value / (cost.workingHours * weeksPerYear)
+        case 'monthly': return cost.value / cost.workingHours / cost.workingDays / (this.weeksPerTimeUnit(cost.unit) - weeksOff)
+        case 'yearly':  return cost.value / cost.workingHours / cost.workingDays / (this.weeksPerTimeUnit(cost.unit) - weeksOff)
         default:
           throw Error('Unexpected unit: ' + cost.unit)
+      }
+    },
+    weeksPerTimeUnit(unit){
+      switch (unit) {
+        case 'monthly': return 365/12/7
+        case 'yearly':  return 365/7
+        default:
+          throw Error('Unexpected unit: ' + unit)
       }
     },
     cycleCounterStyle() {
