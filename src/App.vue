@@ -6,11 +6,11 @@
     <div @click="cycleCounterStyle()"
       style="position: relative; height: 1.5em; font-size: 10vw;"
     >
-      <Flip :value="totalCostsInt" 
+      <Flip :value="costCounterValueInt" 
         v-if="counterStyle ==='flip'" 
         style="display: inline-block; margin: auto;"
       />
-      <Roller :value="totalCostsInt" 
+      <Roller :value="costCounterValueInt" 
         v-if="counterStyle ==='roll'"
         style="display: inline-block; margin: auto;"
       />
@@ -36,11 +36,10 @@
         <template #icon><n-icon><icon-reset/></n-icon></template>
       </n-button>
       
-      <!-- for n-time-picker 00:00:00 is -3600000 -->
-      <n-time-picker round v-model:value="counterRuntime" 
-        :on-blur="() => totalCosts = costsPerSecond * (counterRuntime + 3600000)/1000"
+      <n-time-picker round v-model:value="_costCounterRuntime_timePicker" 
+        :on-blur="() => costCounter.value = costsPerSecond * costCounter.runtime/1000"
         :actions="null"
-        :disabled="counterRuntime > 0 - 3600000 || !!costCounterIterval"
+        :disabled="costCounter.runtime > 0 || !!costCounterIterval"
       />
     </n-space>
     
@@ -101,8 +100,7 @@
           >
             <template #icon><n-icon class="dim"><icon-add/></n-icon></template>
           </n-button>
-          <n-icon size='medium' style="margin-left: 8px;"/>
-          <n-icon size='large' style="margin-left: 8px;"/>
+          <div style="margin-left: 52px;"/>
         </div>
       </template>
     </draggable>
@@ -151,6 +149,9 @@
 </template>
 
 <script>
+import AppStorage from "./libs/AppStorage"
+const appStorage = AppStorage(localStorage, 'cash-creep')
+
 import draggable from 'vuedraggable'
 
 import { 
@@ -176,8 +177,9 @@ import {
   Diagram as IconDiagram
 } from '@vicons/carbon'
 
-import Flip from "./components/Flip";
-import Roller from "./components/Roller";
+import Flip from "./components/Flip"
+import Roller from "./components/Roller"
+
   
 export default {
   name: 'App',
@@ -199,16 +201,18 @@ export default {
     return {
       darkTheme,
       
+      costsList: [],
+      costCounter: {
+        runtime: 0,
+        value: 0,
+      },
+    
       costCounterIterval: null,
       costCounterTickDelay: 1000,
-      counterRuntime: 0 - 3600000, // for n-time-picker 00:00:00 is -3600000
-      
-      costsList: [],
+    
       showCostEditor: false,
       costEditorElement: null,
       costElementHover: null,
-      
-      totalCosts: 0,
       
       counterStyle: 'flip',
       costTimeUnits: ['hourly',  'daily', 'monthly', 'yearly']
@@ -216,21 +220,36 @@ export default {
     }
   },
   computed: {
-    totalCostsInt() {
-      return Math.round(this.totalCosts)
+    costCounterValueInt() {
+      return Math.round(this.costCounter.value)
     },
     costsPerSecond() {
       return this.costsList
         .filter(cost => cost.count && cost.value && cost.unit)
         .map(cost => this.hourlyCostValue(cost)/60/60 * cost.count)
         .reduce((a, b) => a + b, 0) // sum
+    },
+    // WORKAROUND for n-time-picker value for 00:00:00 is -3600000
+    _costCounterRuntime_timePicker:{
+      get() {
+        return this.costCounter.runtime - 3600000
+      },
+      set(val) {
+        this.costCounter.runtime = val + 3600000
+      }
     }
   },
   watch: {
     costsList: {
       deep: true,
       handler(newValue) {
-        localStorage.setItem("cash-creep/costsList", JSON.stringify(newValue));
+        appStorage.costsList = newValue
+      }
+    },
+    costCounter: {
+      deep: true,
+      handler(newValue) {
+        appStorage.costCounter = newValue
       }
     }
   },
@@ -247,12 +266,14 @@ export default {
       }  
     },
     resetCostCounter() {
-      this.counterRuntime = 0 - 3600000, // for n-time-picker 00:00:00 is -3600000
-      this.totalCosts = 0
+      this.costCounter = {
+        runtime: 0,
+        value: 0
+      }
     },
     costCounterTick() {
-      this.counterRuntime += this.costCounterTickDelay
-      this.totalCosts += this.costsPerSecond * (this.costCounterTickDelay/1000)
+      this.costCounter.runtime += this.costCounterTickDelay
+      this.costCounter.value += this.costsPerSecond * (this.costCounterTickDelay/1000)
     },
     addCost(cost) {
       return this.costsList.push(Object.assign({
@@ -284,9 +305,8 @@ export default {
     }
   },
   created() {
-    if (localStorage.getItem("cash-creep/costsList")) {
-      this.costsList = JSON.parse(localStorage.getItem("cash-creep/costsList"));
-    } 
+    this.costCounter = appStorage.costCounter || this.costCounter
+    this.costsList = appStorage.costsList || this.costsList
     if (this.costsList.length === 0) {
       this.addCost({
           count: 42,
