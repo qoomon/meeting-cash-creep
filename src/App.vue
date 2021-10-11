@@ -6,11 +6,11 @@
     <div @click="cycleCounterStyle()"
       style="position: relative; height: 1.5em; font-size: 10vw;"
     >
-      <Flip :value="costCounterValueInt" 
-        v-if="counterStyle ==='flip'" 
+      <Flip :value="costCounterValueInt"
+        v-if="counterStyle ==='flip'"
         style="display: inline-block; margin: auto;"
       />
-      <Roller :value="costCounterValueInt" 
+      <Roller :value="costCounterValueInt"
         v-if="counterStyle ==='roll'"
         style="display: inline-block; margin: auto;"
       />
@@ -18,38 +18,40 @@
         <icon-currency-dollar/>
       </n-icon>
     </div>
-    
+
     <!-- Counter Controls -->
     <n-space justify="center"
-      style="margin: auto; margin-top: 4em; width: 40em; max-width: 96vw;"
+      style="margin: 4em auto auto; width: 40em; max-width: 96vw;"
     >
-      <n-button type="primary" round :ghost="!!costCounterIterval"
-        @click="!costCounterIterval ? startCostCounter() : stopCostCounter()"
+      <n-button type="primary" round icon-placement="right" :ghost="!!costCounterInterval"
+        @click="!costCounterInterval ? startCostCounter() : stopCostCounter()"
       >
         <template #icon>
-          <n-icon v-if="!costCounterIterval"><icon-play/></n-icon>
-          <n-icon v-else><icon-pause/></n-icon>
+          <n-icon>
+            <icon-play v-if="!costCounterInterval"/>
+            <icon-pause v-else/>
+          </n-icon>
         </template>
       </n-button>
-      
+
       <n-button type="default" round @click="resetCostCounter()">
         <template #icon><n-icon><icon-reset/></n-icon></template>
       </n-button>
-      
-      <n-time-picker round v-model:value="_costCounterRuntime_timePicker" 
-        :on-blur="() => costCounter.value = costsPerSecond * costCounter.runtime/1000"
+
+      <n-time-picker round v-model:value="_costCounterRuntime_timePicker"
+        :on-blur="() => costCounter.value = costPerHourTotal/60/60 * costCounter.runtime/1000"
         :actions="null"
-        :disabled="costCounter.runtime > 0 || !!costCounterIterval"
+        :disabled="costCounter.runtime > 0 || !!costCounterInterval"
       />
     </n-space>
-    
+
     <!-- Cost List -->
     <draggable v-model="costsList"
       item-key="id"
       handle=".draggable-handle"
       animation="300"
       ghost-class="draggable-ghost"
-      style="margin: auto; margin-top: 4em; width: 40em; max-width: 96vw;"
+      style="margin: 4em auto auto; width: 40em; max-width: 96vw;"
     >
       <template #item="{i, element}">
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
@@ -60,14 +62,14 @@
             >
               <template #prefix><n-icon size="large"><icon-person/></n-icon></template>
             </n-input-number>
-            
+
             <n-input v-model:value="element.name" type="text" placeholder="Name" />
-            
-            <n-button type="default" text-color="#ffffffd1" round icon-placement="right" 
+
+            <n-button type="default" text-color="#ffffffd1" round icon-placement="right"
               @click="costEditorElement = element; showCostEditor = true"
               style="width: 6em; flex-shrink: 0; flex-grow: 0; margin-left: 2px !important; background-color: #ffffff1a;"
             >
-              {{ Math.round(hourlyCostValue(element)) }}
+              {{ Math.round(costPerHour(element)) }}
               <template #icon>
                 <div style="color: #ffffff61; font-size: 0.9em;">
                   <n-icon size="large"><icon-currency-dollar/></n-icon>
@@ -76,9 +78,9 @@
               </template>
             </n-button>
           </n-input-group>
-          
+
           <n-button text style="margin-left: 8px;"
-            @click="costsList.splice(i, 1)" 
+            @click="costsList.splice(i, 1)"
           >
             <template #icon>
               <n-icon size='medium' class="dim">
@@ -86,7 +88,7 @@
               </n-icon>
             </template>
           </n-button>
-        
+
           <n-icon size='large' class="draggable-handle dim" style="margin-left: 8px;">
             <icon-draggable/>
           </n-icon>
@@ -95,7 +97,7 @@
       <template #footer>
         <div style="display: flex; margin-top: 16px;">
           <n-button type="default" round dashed ghost style="width: 100%;"
-            @click="addCost()" 
+            @click="addCost()"
           >
             <template #icon><n-icon class="dim"><icon-add/></n-icon></template>
           </n-button>
@@ -103,12 +105,12 @@
         </div>
       </template>
     </draggable>
-    
+
     <!-- Cost Value Editor -->
     <n-modal v-model:show="showCostEditor">
       <n-card size="medium" style="width: auto;" :title="costEditorElement.name || 'No Name'" :bordered="false" >
         <template #header-extra>
-          {{ Math.round(hourlyCostValue(costEditorElement)) }}
+          {{ Math.round(costPerHour(costEditorElement)) }}
           <div style="position: relative; bottom: -3px; color: #ffffff61; font-size: 1.2em;">
             <n-icon size="large"><icon-currency-dollar/></n-icon>
             <span style="position: relative; left: -0.4em; bottom: 0; font-size: 0.6em; font-weight: 400; font-style: italic;">h</span>
@@ -116,51 +118,51 @@
         </template>
         <n-space vertical>
           <n-input-group round>
-            <n-select v-model:value="costEditorElement.unit"
+            <n-select v-model:value="costEditorElement.interval"
               default-value="hourly"
-              :options="costTimeUnits.map(unit => ({value: unit, label: `${unit.capitalize()} Costs`}))" 
+              :options="costIntervals.map(interval => ({value: interval, label: `${interval.capitalize()} Costs`}))"
               style="width: 50%; margin-right: 3px;"
             />
             <n-input-number v-model:value="costEditorElement.value"
-              placeholder="Cost" 
+              placeholder="Cost"
               :min="0" :max="999999999"
               style="width: 50%; text-align: center;"
             >
               <template #prefix><n-icon size="large"><icon-currency-dollar/></n-icon></template>
             </n-input-number>
-            
+
           </n-input-group>
-          <n-input-group round v-if="['daily', 'monthly', 'yearly'].includes(costEditorElement.unit)" >
+          <n-input-group round v-if="['daily', 'monthly', 'yearly'].includes(costEditorElement.interval)" >
             <n-input-group-label style="width: 50%; margin-right: 3px;">
-              Daily Working Hours
-            </n-input-group-label>      
+              {{ costEditorElement.interval === 'daily' ? 'Daily' : 'Weekly' }} Working Hours
+            </n-input-group-label>
             <n-input-number v-model:value="costEditorElement.workingHours"
-              placeholder="Hours" 
-              :min="1" :max="24"
+              placeholder="Hours"
+              :min="1" :max="costEditorElement.interval === 'daily' ? 24 : 24 * 7"
               style="width: 50%; text-align: center"
             >
               <template #prefix><n-icon size="large"><icon-time/></n-icon></template>
             </n-input-number>
           </n-input-group>
-          <n-input-group round v-if="['monthly', 'yearly'].includes(costEditorElement.unit)" >
+          <n-input-group round v-if="['monthly', 'yearly'].includes(costEditorElement.interval)" >
             <n-input-group-label style="width: 50%; margin-right: 3px;">
               Weekly Working Days
-            </n-input-group-label>      
+            </n-input-group-label>
             <n-input-number v-model:value="costEditorElement.workingDays"
-              placeholder="Days" 
+              placeholder="Days"
               :min="1" :max="7"
               style="width: 50%; text-align: center"
             >
               <template #prefix><n-icon size="large"><icon-calendar/></n-icon></template>
             </n-input-number>
           </n-input-group>
-          <n-input-group round v-if="['monthly', 'yearly'].includes(costEditorElement.unit)" >
+          <n-input-group round v-if="['monthly', 'yearly'].includes(costEditorElement.interval)" >
             <n-input-group-label style="width: 50%; margin-right: 3px;">
-              {{ costEditorElement.unit.capitalize() }} Off days
-            </n-input-group-label>      
+              {{ costEditorElement.interval.capitalize() }} Off days
+            </n-input-group-label>
             <n-input-number v-model:value="costEditorElement.daysOff"
-              placeholder="Days" 
-              :min="0" :max="Math.floor(costEditorElement.workingDays * weeksPerTimeUnit(costEditorElement.unit))"
+              placeholder="Days"
+              :min="0" :max="Math.floor(costEditorElement.workingDays * weeksPerInterval(costEditorElement.interval))"
               style="width: 50%; text-align: center;"
             >
               <template #prefix><n-icon size="large"><icon-calendar-heat-map/></n-icon></template>
@@ -179,24 +181,25 @@ const appStorage = AppStorage(localStorage, 'cash-creep')
 
 import draggable from 'vuedraggable'
 
-import { 
-  NConfigProvider, darkTheme, 
+import {
+  NConfigProvider, darkTheme,
   NDivider,
   NInputGroup, NInputGroupLabel, NDynamicInput, NInput, NInputNumber, NTimePicker,
   NSelect,
-  NIcon, NButton, NCheckbox, 
+  NIcon,
+  NButton, NCheckbox, NTag,
   NSpace,
   NModal,
   NCard
 } from 'naive-ui'
 
-import { 
-  Play as IconPlay, 
-  Pause as IconPause, 
-  Reset as IconReset, 
-  CurrencyDollar as IconCurrencyDollar, 
-  Person as IconPerson, 
-  Add as IconAdd, 
+import {
+  Play as IconPlay,
+  Pause as IconPause,
+  Reset as IconReset,
+  CurrencyDollar as IconCurrencyDollar,
+  Person as IconPerson,
+  Add as IconAdd,
   Draggable as IconDraggable,
   TrashCan as IconTrashCan,
   Diagram as IconDiagram,
@@ -211,7 +214,7 @@ import Roller from "./components/Roller"
 String.prototype.capitalize = function() {
   return this[0].toUpperCase() + this.slice(1)
 }
-  
+
 export default {
   name: 'App',
   components: {
@@ -219,9 +222,9 @@ export default {
     NDivider,
     NInputGroup, NInputGroupLabel, NDynamicInput, NInput, NInputNumber, NTimePicker,
     NSelect,
-    NIcon, 
+    NIcon,
     IconPlay, IconPause, IconReset, IconCurrencyDollar, IconPerson, IconAdd, IconDraggable, IconTrashCan, IconDiagram, IconTime, IconCalendar, IconCalendarHeatMap,
-    NButton, NCheckbox,
+    NButton, NCheckbox, NTag,
     NSpace,
     NModal,
     NCard,
@@ -231,34 +234,33 @@ export default {
   data() {
     return {
       darkTheme,
-      
+
       costsList: [],
       costCounter: {
         runtime: 0,
         value: 0,
       },
-    
-      costCounterIterval: null,
+
+      costCounterInterval: null,
       costCounterTickDelay: 1000,
-    
+
       showCostEditor: false,
       costEditorElement: null,
       costElementHover: null,
-      
+
       counterStyle: 'flip',
-      costTimeUnits: ['hourly',  'daily', 'monthly', 'yearly']
-        
+      costIntervals: ['yearly', 'monthly', 'daily', 'hourly']
     }
   },
   computed: {
+    costPerHourTotal() {
+      return this.costsList
+        .filter(cost => cost.count && cost.value && cost.interval)
+        .map(cost => this.costPerHour(cost) * cost.count)
+        .reduce((a, b) => a + b, 0) // sum
+    },
     costCounterValueInt() {
       return Math.round(this.costCounter.value)
-    },
-    costsPerSecond() {
-      return this.costsList
-        .filter(cost => cost.count && cost.value && cost.unit)
-        .map(cost => this.hourlyCostValue(cost)/60/60 * cost.count)
-        .reduce((a, b) => a + b, 0) // sum
     },
     // WORKAROUND for n-time-picker value for 00:00:00 is -3600000
     _costCounterRuntime_timePicker:{
@@ -287,14 +289,13 @@ export default {
   methods: {
     startCostCounter() {
       this.stopCostCounter()
-      this.costCounterIterval = setInterval(this.costCounterTick, this.costCounterTickDelay)
-      
+      this.costCounterInterval = setInterval(this.costCounterTick, this.costCounterTickDelay)
     },
     stopCostCounter() {
-      if(this.costCounterIterval) {
-        clearInterval(this.costCounterIterval)
-        this.costCounterIterval = null
-      }  
+      if(this.costCounterInterval) {
+        clearInterval(this.costCounterInterval)
+        this.costCounterInterval = null
+      }
     },
     resetCostCounter() {
       this.costCounter = {
@@ -304,36 +305,45 @@ export default {
     },
     costCounterTick() {
       this.costCounter.runtime += this.costCounterTickDelay
-      this.costCounter.value += this.costsPerSecond * (this.costCounterTickDelay/1000)
+      this.costCounter.value += this.costPerHourTotal/60/60 * (this.costCounterTickDelay/1000)
     },
     addCost(cost) {
       return this.costsList.push(Object.assign({
         id: window.performance.now() * Math.pow(10,10), // dirty id generation
         count: 0,
         value: 0,
-        unit: 'hourly',
-        workingHours: 8,
-        workingDays: 5,
-        daysOff: 24
+        interval: 'hourly',
+        workingHours: 0,
+        workingDays: 0,
+        daysOff: 0
       }, cost))
     },
-    hourlyCostValue(cost) {
-      const weeksOff = cost.daysOff / cost.workingDays
-      switch (cost.unit) {
-        case 'hourly':  return cost.value;
-        case 'daily':   return cost.value / cost.workingHours
-        case 'monthly': return cost.value / cost.workingHours / cost.workingDays / (this.weeksPerTimeUnit(cost.unit) - weeksOff)
-        case 'yearly':  return cost.value / cost.workingHours / cost.workingDays / (this.weeksPerTimeUnit(cost.unit) - weeksOff)
-        default:
-          throw Error('Unexpected unit: ' + cost.unit)
+    costPerHour(cost) {
+      switch (cost.interval) {
+        case 'hourly':
+          return cost.value
+        case 'daily': {
+          return cost.workingHours > 0
+              ? cost.value / cost.workingHours : 0
+        }
+        case 'yearly':
+        case 'monthly': {
+          const weeksOff = cost.daysOff / cost.workingDays
+          let workingWeeks = this.weeksPerInterval(cost.interval) - weeksOff
+          return workingWeeks > 0 && cost.workingHours > 0
+              ? cost.value / workingWeeks / cost.workingHours : 0
+        }
       }
+      throw Error('Unexpected interval: ' + cost.interval)
     },
-    weeksPerTimeUnit(unit){
-      switch (unit) {
-        case 'monthly': return 365/12/7
+    weeksPerInterval(interval){
+      switch (interval) {
         case 'yearly':  return 365/7
+        case 'monthly': return 365/12/7
+        case 'daily': return 1/7
+        case 'hourly': return 1/7/24
         default:
-          throw Error('Unexpected unit: ' + unit)
+          throw Error('Unexpected interval: ' + interval)
       }
     },
     cycleCounterStyle() {
@@ -349,10 +359,13 @@ export default {
     this.costsList = appStorage.costsList || this.costsList
     if (this.costsList.length === 0) {
       this.addCost({
-          count: 42,
-          value: 99,
-          unit: 'hourly',
-          name: 'Whimsical Unicorn'
+        name: 'Whimsical Unicorn',
+        value: 99000,
+        interval: 'yearly',
+        workingHours: 40,
+        workingDays: 5,
+        daysOff: 24,
+        count: 42
       })
     }
   },
@@ -411,5 +424,9 @@ button.n-button:hover > .n-button__icon .n-icon.dim {
 
 .draggable-ghost {
   opacity: 0;
+}
+
+.n-input input[style*='text-decoration: line-through;'] {
+  color: #c30000;
 }
 </style>
