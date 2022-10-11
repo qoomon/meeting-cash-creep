@@ -376,6 +376,10 @@ export default {
 </script>
 
 <style>
+:root {
+  color-scheme: dark;
+}
+
 body {
   position: relative;
   box-sizing: border-box;
