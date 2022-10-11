@@ -378,6 +378,7 @@ export default {
 <style>
 :root {
   color-scheme: dark;
+  background-color: #40414a;
 }
 
 body {
@@ -386,7 +387,6 @@ body {
   width: 100vw;
   min-height: 100vh;
   padding: 0;
-  background-color: #40414a;
   overflow-y: auto;
 }
 
