@@ -8,14 +8,14 @@
   },
   "dependencies": {
     "@pqina/flip": "^1.7.7",
-    "vue": "^3.0.0",
+    "vue": "^3.2.41",
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
-    "@vicons/carbon": "^0.11.0",
-    "@vue/cli-service": "~4.5.0",
-    "@vue/compiler-sfc": "^3.0.0",
-    "naive-ui": "^2.19.3",
+    "@vicons/carbon": "^0.12.0",
+    "@vue/cli-service": "^5.0.8",
+    "@vue/compiler-sfc": "^3.2.41",
+    "naive-ui": "^2.33.5",
     "vfonts": "^0.1.0"
   }
 }

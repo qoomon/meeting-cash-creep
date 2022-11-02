@@ -20,11 +20,13 @@
     </div>
 
     <!-- Counter Controls -->
-    <n-space justify="center"
+    <n-space justify="center" size="small"
       style="margin: 4em auto auto; width: 40em; max-width: 96vw;"
     >
-      <n-button type="primary" round icon-placement="right" :ghost="!!costCounterInterval"
-        @click="!costCounterInterval ? startCostCounter() : stopCostCounter()"
+
+      <n-button type="primary" round
+                :ghost="!!costCounterInterval"
+                @click="!costCounterInterval ? startCostCounter() : stopCostCounter()"
       >
         <template #icon>
           <n-icon>
@@ -34,15 +36,16 @@
         </template>
       </n-button>
 
-      <n-button type="default" round @click="resetCostCounter()">
-        <template #icon><n-icon><icon-reset/></n-icon></template>
-      </n-button>
-
-      <n-time-picker round v-model:value="_costCounterRuntime_timePicker"
-        :on-blur="() => costCounter.value = costPerHourTotal/60/60 * costCounter.runtime/1000"
-        :actions="null"
-        :disabled="costCounter.runtime > 0 || !!costCounterInterval"
+      <n-time-picker v-model:value="_costCounter_runtime"
+                     :on-blur="() => costCounter.value = costPerHourTotal/60/60 * costCounter.runtime/1000"
+                     :actions="null"
+                     :disabled="!!costCounterInterval"
+                     :default-value="0"
+                     clearable
+                     style="border-radius: 100px;"
       />
+
+
     </n-space>
 
     <!-- Cost List -->
@@ -263,12 +266,12 @@ export default {
       return Math.round(this.costCounter.value)
     },
     // WORKAROUND for n-time-picker value for 00:00:00 is -3600000
-    _costCounterRuntime_timePicker:{
+    _costCounter_runtime:{
       get() {
         return this.costCounter.runtime - 3600000
       },
       set(val) {
-        this.costCounter.runtime = val + 3600000
+        this.costCounter.runtime = (val || -3600000) + 3600000
       }
     }
   },
