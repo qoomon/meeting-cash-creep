@@ -56,7 +56,7 @@
       ghost-class="draggable-ghost"
       style="margin: 4em auto auto; width: 40em; max-width: 96vw;"
     >
-      <template #item="{i, element}">
+      <template #item="{element, index}">
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
           <n-input-group round >
             <n-input-number v-model:value="element.count" :min="0" :max="9999"
@@ -83,7 +83,7 @@
           </n-input-group>
 
           <n-button text style="margin-left: 8px;"
-            @click="costsList.splice(i, 1)"
+            @click="costsList.splice(index, 1)"
           >
             <template #icon>
               <n-icon size='medium' class="dim">
@@ -298,12 +298,6 @@ export default {
       if(this.costCounterInterval) {
         clearInterval(this.costCounterInterval)
         this.costCounterInterval = null
-      }
-    },
-    resetCostCounter() {
-      this.costCounter = {
-        runtime: 0,
-        value: 0
       }
     },
     costCounterTick() {
