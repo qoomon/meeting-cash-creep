@@ -14,7 +14,7 @@
         v-if="counterStyle ==='roll'"
         style="display: inline-block; margin: auto;"
       />
-      <n-icon color="#2c7b5e" style="position: absolute; height: 100%; line-height: 1.9em;">
+      <n-icon color="#2f7d60" style="position: absolute; height: 100%; line-height: 1.9em;">
         <icon-currency-dollar/>
       </n-icon>
     </div>
@@ -24,9 +24,10 @@
       style="margin: 4em auto auto; width: 40em; max-width: 96vw;"
     >
 
-      <n-button type="primary" round
+      <n-button type="primary" round color="#2f7d60"
                 :ghost="!!costCounterInterval"
                 @click="!costCounterInterval ? startCostCounter() : stopCostCounter()"
+                style=""
       >
         <template #icon>
           <n-icon>
@@ -42,10 +43,7 @@
                      :disabled="!!costCounterInterval"
                      :default-value="0"
                      clearable
-                     style="border-radius: 100px;"
       />
-
-
     </n-space>
 
     <!-- Cost List -->
@@ -58,19 +56,19 @@
     >
       <template #item="{element, index}">
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
-          <n-input-group round >
+          <n-input-group>
             <n-input-number v-model:value="element.count" :min="0" :max="9999"
               placeholder="0"
-              style="width: 8em; flex-shrink: 0; flex-grow: 0; margin-right: 3px; text-align: center; "
+              style="width: 8em; flex-shrink: 0; flex-grow: 0; margin-right: 3px; text-align: center;"
             >
               <template #prefix><n-icon size="large"><icon-person/></n-icon></template>
             </n-input-number>
 
             <n-input v-model:value="element.name" type="text" placeholder="Name" />
 
-            <n-button type="default" text-color="#ffffffd1" round icon-placement="right"
+            <n-button type="default" text-color="#ffffffd1" icon-placement="right"
               @click="costEditorElement = element; showCostEditor = true"
-              style="width: 6em; flex-shrink: 0; flex-grow: 0; margin-left: 2px !important; background-color: #ffffff1a;"
+              style="width: 6em; flex-shrink: 0; flex-grow: 0; margin-left: 2px !important;"
             >
               {{ Math.round(costPerHour(element)) }}
               <template #icon>
@@ -375,7 +373,8 @@ export default {
 <style>
 :root {
   color-scheme: dark;
-  background-color: #40414a;
+  background-color: #181a1b;
+  color: whitesmoke;
 }
 
 body {
@@ -396,15 +395,17 @@ body {
   margin-top: 2em;
 }
 
-div.n-input-number[round] > div.n-input,
-div.n-time-picker[round] > div.n-input,
-div.n-input-group[round] > div.n-input,
-div.n-input-group[round] > div.n-input-group-label,
-div.n-input-group[round] > div.n-input-number > div.n-input,
-div.n-input-group[round] > div.n-select > div.n-base-selection  {
-  border-radius: calc(var(--height) / 2);
+.n-input,
+.n-input.n-input--disabled{
+  background-color: transparent;
 }
-div.n-input-group > button.n-button > div.n-button__border {
+
+
+.n-input input[style*='text-decoration: line-through;'] {
+  color: #da5353;
+}
+
+.n-input-group > .n-button > .n-button__border {
   display: none;
 }
 
@@ -412,7 +413,8 @@ div.n-input-group > button.n-button > div.n-button__border {
   opacity: 0.5;
   transition: opacity 0.3s;
 }
-button.n-button:hover > .n-button__icon .n-icon.dim {
+
+.n-button:hover > .n-button__icon .n-icon.dim {
   opacity: inherit;
 }
 
@@ -427,7 +429,8 @@ button.n-button:hover > .n-button__icon .n-icon.dim {
   opacity: 0;
 }
 
-.n-input input[style*='text-decoration: line-through;'] {
-  color: #c30000;
+.tick-flip-panel {
+  color: rgb(220, 217, 212);
+  background-color: rgb(38, 41, 43);
 }
 </style>
