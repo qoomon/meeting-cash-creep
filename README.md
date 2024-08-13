@@ -8,7 +8,7 @@ This app transparently show you how expensive your meetings are 🤑
 
 * German Salaries -> https://www.kununu.com/de/gehalt
   
-
+---
 
 ## Development 
 
