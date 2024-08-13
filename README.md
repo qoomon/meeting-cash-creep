@@ -1,5 +1,7 @@
 # meeting-cash-creep
 
+This app transparently show you how expensive your meetings are 🤑
+
 **[Demo](https://qoomon.github.io/meeting-cash-creep)**
 
 ## Project setup
