@@ -1,6 +1,7 @@
 <template>
   <n-config-provider :theme="darkTheme">
     <img src="./assets/meeting-bubbles.png" style="height: 30vw; max-height: 20vh;">
+    <div id="header">Cash Creep</div>
 
     <!-- Counter -->
     <div @click="cycleCounterStyle()"
@@ -393,6 +394,20 @@ body {
   text-align: center;
   color: #c3c3c6;
   margin-top: 2em;
+}
+
+#header {
+  height: 30vw;
+  max-height: 20vh;
+  background-image: url(/meeting-cash-creep/img/meeting-bubbles.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  font-size: 3.5em;
+  padding-top: 0.5em;
+  align-content: center;
+  font-family: fantasy;
+  font-weight: bold;
 }
 
 .n-input,
