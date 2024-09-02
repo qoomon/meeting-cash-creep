@@ -1,6 +1,5 @@
 <template>
   <n-config-provider :theme="darkTheme">
-    <img src="./assets/meeting-bubbles.png" style="height: 30vw; max-height: 20vh;">
     <div id="header">Cash Creep</div>
 
     <!-- Counter -->
@@ -399,7 +398,7 @@ body {
 #header {
   height: 30vw;
   max-height: 20vh;
-  background-image: url(/meeting-cash-creep/img/meeting-bubbles.png);
+  background-image: url('./assets/meeting-bubbles.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
