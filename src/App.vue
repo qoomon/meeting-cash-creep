@@ -402,11 +402,12 @@ body {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  font-size: 3.5em;
+  font-size: min(5vw, 2rem);
   padding-top: 0.5em;
   align-content: center;
   font-family: fantasy;
   font-weight: bold;
+  margin-bottom: 1em;
 }
 
 .n-input,
