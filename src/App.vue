@@ -21,7 +21,7 @@
 
     <!-- Counter Controls -->
     <n-space justify="center" size="small"
-      style="margin: 4em auto auto; width: 40em; max-width: 96vw;"
+      style="margin: 4em auto auto; max-width: 40em;"
     >
 
       <n-button type="primary" round color="#2f7d60"
@@ -52,7 +52,7 @@
       handle=".draggable-handle"
       animation="300"
       ghost-class="draggable-ghost"
-      style="margin: 4em auto auto; width: 40em; max-width: 96vw;"
+      style="margin: 4em auto auto; max-width: 40em;"
     >
       <template #item="{element, index}">
         <div style="display: flex; align-items: center; margin-bottom: 8px;">
