@@ -63,4 +63,7 @@ export default {
   font-size: 1em;
   width: fit-content;
 }
+.tick-credits {
+  display: none;
+}
 </style>
