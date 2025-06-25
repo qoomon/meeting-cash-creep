@@ -4,19 +4,28 @@
 
     <!-- Counter -->
     <div @click="cycleCounterStyle()"
-      style="position: relative; height: 1.5em; font-size: 10vw;"
+      style="display: flex; justify-content: center; position: relative; height: 1.5em; font-size: 10vw;"
     >
-      <Flip :value="costCounterValueInt"
+      <div style="width: 0.9em"></div>
+      <Flip
         v-if="counterStyle ==='flip'"
-        style="display: inline-block; margin: auto;"
+        :value="costCounterValueInt"
       />
-      <Roller :value="costCounterValueInt"
+      <Roller
         v-if="counterStyle ==='roll'"
-        style="display: inline-block; margin: auto;"
+        :value="costCounterValueInt"
       />
-      <n-icon color="#2f7d60" style="position: absolute; height: 100%; line-height: 1.9em;">
-        <icon-currency-dollar/>
-      </n-icon>
+      <div style="width: 0.9em; display: flex ; flex-direction: column; align-items: center; justify-content: space-around; padding-bottom: 0.02em;">
+        <n-icon color="#2f7d60" size="0.8em">
+          <icon-currency-dollar/>
+        </n-icon>
+        <Flip
+            v-if="counterStyle ==='flip'"
+            :value="costCounterValueFractionInt"
+            :padding="2"
+            style="font-size: 0.3em"
+        />
+      </div>
     </div>
 
     <!-- Counter Controls -->
@@ -261,7 +270,10 @@ export default {
         .reduce((a, b) => a + b, 0) // sum
     },
     costCounterValueInt() {
-      return Math.round(this.costCounter.value)
+      return Math.floor(this.costCounter.value)
+    },
+    costCounterValueFractionInt() {
+      return Math.floor(this.costCounter.value % 1 * 100)
     },
     // WORKAROUND for n-time-picker value for 00:00:00 is -3600000
     _costCounter_runtime:{

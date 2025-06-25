@@ -16,11 +16,11 @@ function timeout(ms) {
 
 function setDigit(value, pos, digit) {
   const valueDigits = String(value).split('').map(digit => +digit).reverse()
-  if(pos >= valueDigits.length){
+  if (pos >= valueDigits.length) {
     const digitsDiff = pos - valueDigits.length + 1
     valueDigits.push(...Array(digitsDiff).fill(0))
   }
-  
+
   valueDigits[pos] = digit
   return valueDigits.reverse().join('')
 }
@@ -29,14 +29,18 @@ export default {
   name: "Flip",
   props: {
     value: Number,
+    padding: {
+      type: Number,
+      default: 1,
+    },
     variance: {
       type: Number,
-      default: 100
+      default: 100,
     }
   },
   mounted() {
     this._tick = Tick.DOM.create(this.$refs.tick, {
-      value: this.$props.value
+      value: String(this.$props.value).padStart(this.$props.padding, "0"),
     });
   },
   destroyed() {
@@ -44,13 +48,15 @@ export default {
   },
   watch: {
     async value(newValue, oldValue) {
-      // -- flip vaiance for each digit --
-      const newValueLenght = Math.ceil(Math.log10(newValue + 1))
-      this._tick.value = this._tick.value % Math.pow(10, newValueLenght)
+      const newTickValue = String(newValue).padStart(this.$props.padding, "0");
+      const currentTickValue = String(this._tick.value ?? 0)
+      if (newTickValue.length < currentTickValue.length) {
+        this._tick.value = currentTickValue.slice(-newTickValue.length);
+      }
       let pos = 0
-      for (const digit of String(newValue).split('').map(char => Number(char)).reverse()) {
-        await timeout(Math.random() * this.variance)
+      for (const digit of newTickValue.split('').map(char => Number(char)).reverse()) {
         this._tick.value = setDigit(this._tick.value, pos, digit)
+        await timeout(Math.random() * this.variance)
         pos++
       }
     }
@@ -63,6 +69,8 @@ export default {
   font-size: 1em;
   width: fit-content;
 }
+</style>
+<style>
 .tick-credits {
   display: none;
 }

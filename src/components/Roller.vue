@@ -1,13 +1,13 @@
 <template>
 	<transition-group tag="div" name="roller" class="roller">
-		<component :is="t != '\n' ? 'div' : 'br'" class="roller__wrapper" v-for="(t, idx) in String(value)" :key="getIndex(t, idx)">
+		<component :is="t !== '\n' ? 'div' : 'br'" class="roller__wrapper" v-for="(t, idx) in String(value).padStart($props.padding, '0')" :key="getIndex(t, idx)">
 			<ul
-				v-if="t != '\n'"
+				v-if="t !== '\n'"
 				class="roller__char rollerBlock"
 				:style="{ top: `${isRollStart ? findCharIndex(t) * -100 : 1}%`, height: `${charList.length * 100}%`, transition: `${transition}s` }"
 			>
-				<li class="roller__char__item" :class="{ copyable: t == char }" v-for="char in findCharIndex(t, true) != -1 ? charList : [t]" :key="char" :style="{ opacity: char == ' ' ? 0 : 1 }">
-					{{ char == " " ? "-" : char }}
+				<li class="roller__char__item" :class="{ copyable: t === char }" v-for="char in findCharIndex(t, true) !== -1 ? charList : [t]" :key="char" :style="{ opacity: char === ' ' ? 0 : 1 }">
+					{{ char === " " ? "-" : char }}
 				</li>
 			</ul>
 		</component>
@@ -19,6 +19,10 @@ export default {
   name: "Roller",
   props: {
     value: Number,
+    padding: {
+      type: Number,
+      default: 1
+    },
     charList: {
       type: Array,
       default() {
@@ -60,11 +64,11 @@ export default {
 			return idx.toString(); 
   	},
   	isIncludeCharList(t) {
-  		return this.charList.indexOf(t) != -1;
+  		return this.charList.indexOf(t) !== -1;
   	},
   	findCharIndex(t, isOriginal) {
   		let idx = this.charList.indexOf(t);
-  		if (idx == -1 && !isOriginal) return 0;
+  		if (idx === -1 && !isOriginal) return 0;
   		else return idx;
   	}
   },
@@ -117,7 +121,7 @@ export default {
   overflow: hidden;
   width: fit-content;
   font-size: 1em;
-  color: #edebeb;
+    color: #c6c6c6;
 }
 .roller .roller__wrapper {
   display: inline-flex;
